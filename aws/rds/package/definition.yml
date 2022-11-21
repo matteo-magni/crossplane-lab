@@ -24,6 +24,14 @@ spec:
     schema:
       openAPIV3Schema:
         properties:
+          metadata:
+            type: object
+            properties:
+              labels:
+                type: object
+                properties:
+                  port:
+                    type: string
           spec:
             properties:
               parameters:
