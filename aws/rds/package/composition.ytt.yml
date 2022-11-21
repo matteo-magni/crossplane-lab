@@ -108,14 +108,14 @@ spec:
       fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.passwordSecretRef.name
     - type: ToCompositeFieldPath
-      fromFieldPath: status.atProvider.address
-      toFieldPath: status.address
+      fromFieldPath: status.atProvider.endpoint
+      toFieldPath: status.endpoint
     - type: ToCompositeFieldPath
       fromFieldPath: spec.parameters.location
       toFieldPath: status.location
     - type: ToCompositeFieldPath
       fromFieldPath: status.atProvider.endpoint
-      toFieldPath: metadata.labels.port
+      toFieldPath: status.port
       transforms:
       - type: string
         string:
@@ -124,8 +124,8 @@ spec:
             group: 2
           type: Regexp
     - type: FromCompositeFieldPath
+      fromFieldPath: status.port
       toFieldPath: metadata.labels.port
-      fromFieldPath: metadata.labels.port
 
   - name: securitygroup
     base:

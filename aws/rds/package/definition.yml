@@ -24,14 +24,6 @@ spec:
     schema:
       openAPIV3Schema:
         properties:
-          metadata:
-            type: object
-            properties:
-              labels:
-                type: object
-                properties:
-                  port:
-                    type: string
           spec:
             properties:
               parameters:
@@ -85,6 +77,9 @@ spec:
       - name: address
         type: string
         jsonPath: .status.address
+      - name: port
+        type: string
+        jsonPath: .status.port
       - name: connection-details
         type: string
         jsonPath: .spec.publishConnectionDetailsTo.name
