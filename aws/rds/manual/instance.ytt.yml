@@ -1,0 +1,32 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: rds.aws.upbound.io/v1beta1
+kind: Instance
+metadata:
+  annotations:
+    upjet.upbound.io/manual-intervention: This resource has a password secret reference.
+  name: #@ data.values.name
+spec:
+  forProvider:
+    allocatedStorage: 20
+    engine: postgres
+    engineVersion: "13"
+    instanceClass: db.t3.micro
+    dbName: example
+    passwordSecretRef:
+      key: password
+      name: #@ data.values.name
+      namespace: #@ data.values.namespace
+    publiclyAccessible: true
+    region: #@ data.values.region
+    multiAz: false
+    dbSubnetGroupName: #@ data.values.dbSubnetGroupName
+    vpcSecurityGroupIdRefs:
+      - name: #@ data.values.name
+    skipFinalSnapshot: true
+    storageEncrypted: false
+    storageType: gp2
+    username: adminuser
+  writeConnectionSecretToRef:
+    name: #@ data.values.name + "-out"
+    namespace: default

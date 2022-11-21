@@ -1,0 +1,176 @@
+#@ load("@ytt:data", "data")
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+ labels:
+   provider: aws
+ name: aws-postgresql
+spec:
+  compositeTypeRef:
+    apiVersion: testing.ref.svc.apps.tanzu.vmware.com/v1alpha1
+    kind: XPostgreSQLInstance
+  publishConnectionDetailsWithStoreConfigRef:
+    name: default
+  resources:
+
+  - name: password
+    base:
+      apiVersion: kubernetes.crossplane.io/v1alpha1
+      kind: Object
+      spec:
+        forProvider:
+          manifest:
+            apiVersion: secretgen.k14s.io/v1alpha1
+            kind: Password
+            metadata:
+              name: ""
+              namespace: #@ data.values.namespace
+            spec:
+              length: 64
+              secretTemplate:
+                type: Opaque
+                stringData:
+                  password: $(value)
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.manifest.metadata.name
+
+  - name: rdsinstance
+    base:
+      apiVersion: rds.aws.upbound.io/v1beta1
+      kind: Instance
+      spec:
+        forProvider:
+          engine: postgres
+          engineVersion: "13"
+          instanceClass: db.t3.micro
+          passwordSecretRef:
+            key: password
+            name: ""
+            namespace: #@ data.values.namespace
+          publiclyAccessible: true
+          vpcSecurityGroupIdSelector:
+            matchControllerRef: true
+          skipFinalSnapshot: true
+          storageEncrypted: false
+          storageType: gp2
+          dbSubnetGroupName: ""
+        writeConnectionSecretToRef:
+          namespace: #@ data.values.namespace
+
+    connectionDetails:
+    - name: type
+      value: postgresql
+    - name: provider
+      value: aws
+    - name: database
+      fromFieldPath: spec.forProvider.dbName
+      type: FromFieldPath
+    - name: username
+      fromFieldPath: spec.forProvider.username
+      type: FromFieldPath
+    - name: password
+      fromConnectionSecretKey: attribute.password
+    - name: host
+      fromFieldPath: status.atProvider.address
+      type: FromFieldPath
+    - name: port
+      value: "5432"
+  
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.writeConnectionSecretToRef.name
+      transforms:
+      - string:
+          fmt: '%s-postgresql'
+          type: Format
+        type: string
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.storageGB
+      toFieldPath: spec.forProvider.allocatedStorage
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.dbSubnetGroupName
+      toFieldPath: spec.forProvider.dbSubnetGroupName
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: spec.forProvider.region
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.username
+      toFieldPath: spec.forProvider.username
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.dbName
+      toFieldPath: spec.forProvider.dbName
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.passwordSecretRef.name
+    - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.address
+      toFieldPath: status.address
+    - type: ToCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: status.location
+    - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.endpoint
+      toFieldPath: status.port
+      transforms:
+      - type: string
+        string:
+          regexp:
+            match: '^([^:]+):(\d+)$'
+            group: 2
+          type: Regexp
+
+  - name: securitygroup
+    base:
+      apiVersion: ec2.aws.upbound.io/v1beta1
+      kind: SecurityGroup
+      spec:
+        forProvider:
+          description: ""
+          name: ""
+          region: ""
+          vpcId: ""
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.name
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.description
+      transforms:
+      - string:
+          fmt: 'Traffic to RDS instance %s'
+          type: Format
+        type: string
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.vpcId
+      toFieldPath: spec.forProvider.vpcId
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: spec.forProvider.region
+
+  - name: securitygrouprule
+    base:
+      apiVersion: ec2.aws.upbound.io/v1beta1
+      kind: SecurityGroupRule
+      spec:
+        forProvider:
+          cidrBlocks:
+            - ""
+          fromPort: 5432
+          toPort: 5432
+          protocol: tcp
+          region: ""
+          securityGroupIdSelector:
+            matchControllerRef: true
+          type: ingress
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.cidrBlocks
+      toFieldPath: spec.forProvider.cidrBlocks
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: spec.forProvider.region

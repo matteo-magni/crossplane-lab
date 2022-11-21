@@ -1,0 +1,12 @@
+#@data/values-schema
+---
+namespace: upbound-system
+name: rds-test
+region: eu-central-1
+dbSubnetGroupName: trp-testing
+
+#@schema/default ["10.0.0.0/16"]
+securityGroupCIDRs:
+  - ""
+
+vpcId: vpc-0157e2424963dcd93

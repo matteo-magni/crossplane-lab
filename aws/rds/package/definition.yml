@@ -1,0 +1,82 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xpostgresqlinstances.testing.ref.svc.apps.tanzu.vmware.com
+spec:
+  claimNames:
+    kind: PostgreSQLInstance
+    plural: postgresqlinstances
+  connectionSecretKeys:
+  - type
+  - provider
+  - host
+  - port
+  - database
+  - username
+  - password
+  group: testing.ref.svc.apps.tanzu.vmware.com
+  names:
+    kind: XPostgreSQLInstance
+    plural: xpostgresqlinstances
+  versions:
+  - name: v1alpha1
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        properties:
+          spec:
+            properties:
+              parameters:
+                properties:
+                  storageGB:
+                    type: integer
+                  vpcId:
+                    type: string
+                  location:
+                    type: string
+                  cidrBlocks:
+                    type: array
+                    items:
+                      type: string
+                      pattern: '^(1?\d{1,2}|2[01234]\d|25[012345])(\.(1?\d{1,2}|2[01234]\d|25[012345])){3}\/(\d|[12]\d|3[012])$'
+                  dbSubnetGroupName:
+                    type: string
+                  username:
+                    type: string
+                    default: root
+                    description: The name for the master user
+                  dbName:
+                    type: string
+                    default: postgres
+                    description: The name of the database to create when the DB instance is created
+                required:
+                - storageGB
+                - vpcId
+                - location
+                - cidrBlocks
+                - dbSubnetGroupName
+                type: object
+            required:
+            - parameters
+            type: object
+          status:
+            type: object
+            properties:
+              address:
+                type: string
+              port:
+                type: string
+              location:
+                type: string
+        type: object
+    served: true
+    additionalPrinterColumns:
+      - name: location
+        type: string
+        jsonPath: .spec.parameters.location
+      - name: address
+        type: string
+        jsonPath: .status.address
+      - name: connection-details
+        type: string
+        jsonPath: .spec.publishConnectionDetailsTo.name

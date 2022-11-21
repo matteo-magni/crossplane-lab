@@ -1,0 +1,24 @@
+apiVersion: testing.ref.svc.apps.tanzu.vmware.com/v1alpha1
+kind: PostgreSQLInstance
+metadata:
+  namespace: default
+  name: trp-aws-015
+spec:
+  compositionSelector:
+    matchLabels:
+      provider: aws
+  parameters:
+    location: eu-central-1
+    storageGB: 20
+    vpcId: vpc-0157e2424963dcd93
+    cidrBlocks:
+      - 0.0.0.0/0
+    dbSubnetGroupName: trp-testing
+  publishConnectionDetailsTo:
+    name: trp-aws-rds-bindable-015
+    configRef:
+      name: default
+    metadata:
+      labels:
+        services.apps.tanzu.vmware.com/class: aws-postgresql
+      type: servicebinding.io/postgresql

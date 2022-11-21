@@ -1,0 +1,39 @@
+#@ load("@ytt:data", "data")
+#! ---
+#! apiVersion: rds.aws.upbound.io/v1beta1
+#! kind: SecurityGroup
+#! metadata:
+#!   name: #@ data.values.name
+#! spec:
+#!   deletionPolicy: Delete
+#!   forProvider:
+#!     ingress: #@ [ {"cidr": x } for x in data.values.securityGroupCIDRs ]
+#!     region: #@ data.values.region
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroup
+metadata:
+  name: #@ data.values.name
+spec:
+  forProvider:
+    description: Allow all incoming traffic
+    name: #@ data.values.name + "-allow_all"
+    region: #@ data.values.region
+    tags:
+      Name: allow_all
+    vpcId: #@ data.values.vpcId
+---
+apiVersion: ec2.aws.upbound.io/v1beta1
+kind: SecurityGroupRule
+metadata:
+  name: #@ data.values.name + "-psql"
+spec:
+  forProvider:
+    cidrBlocks: #@ data.values.securityGroupCIDRs
+    fromPort: 5432
+    toPort: 5432
+    protocol: tcp
+    region: #@ data.values.region
+    securityGroupIdRef:
+      name: #@ data.values.name
+    type: ingress
