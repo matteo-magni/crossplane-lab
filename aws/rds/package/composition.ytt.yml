@@ -18,9 +18,6 @@ spec:
     base:
       apiVersion: kubernetes.crossplane.io/v1alpha1
       kind: Object
-      metadata:
-        labels:
-          port: "5432"
       spec:
         forProvider:
           manifest:
@@ -39,96 +36,96 @@ spec:
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.manifest.metadata.name
+
+  - name: rdsinstance
+    base:
+      apiVersion: rds.aws.upbound.io/v1beta1
+      kind: Instance
+      spec:
+        forProvider:
+          engine: postgres
+          engineVersion: "13"
+          instanceClass: db.t3.micro
+          passwordSecretRef:
+            key: password
+            name: ""
+            namespace: #@ data.values.namespace
+          publiclyAccessible: true
+          vpcSecurityGroupIdSelector:
+            matchControllerRef: true
+          skipFinalSnapshot: true
+          storageEncrypted: false
+          storageType: gp2
+          dbSubnetGroupName: ""
+        writeConnectionSecretToRef:
+          namespace: #@ data.values.namespace
+
+    connectionDetails:
+    - name: type
+      value: postgresql
+    - name: provider
+      value: aws
+    - name: database
+      fromFieldPath: spec.forProvider.dbName
+      type: FromFieldPath
+    - name: username
+      fromFieldPath: spec.forProvider.username
+      type: FromFieldPath
+    - name: password
+      fromConnectionSecretKey: attribute.password
+    - name: host
+      fromFieldPath: status.atProvider.address
+      type: FromFieldPath
+    - name: port
+      fromFieldPath: metadata.labels.port
+      type: FromFieldPath
+  
+    patches:
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.uid
+      toFieldPath: spec.writeConnectionSecretToRef.name
+      transforms:
+      - string:
+          fmt: '%s-postgresql'
+          type: Format
+        type: string
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.storageGB
+      toFieldPath: spec.forProvider.allocatedStorage
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.dbSubnetGroupName
+      toFieldPath: spec.forProvider.dbSubnetGroupName
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: spec.forProvider.region
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.username
+      toFieldPath: spec.forProvider.username
+    - type: FromCompositeFieldPath
+      fromFieldPath: spec.parameters.dbName
+      toFieldPath: spec.forProvider.dbName
+    - type: FromCompositeFieldPath
+      fromFieldPath: metadata.name
+      toFieldPath: spec.forProvider.passwordSecretRef.name
     - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.address
+      toFieldPath: status.address
+    - type: ToCompositeFieldPath
+      fromFieldPath: spec.parameters.location
+      toFieldPath: status.location
+    - type: ToCompositeFieldPath
+      fromFieldPath: status.atProvider.endpoint
+      toFieldPath: metadata.labels.port
+      transforms:
+      - type: string
+        string:
+          regexp:
+            match: '^([^:]+):(\d+)$'
+            group: 2
+          type: Regexp
+    - type: FromCompositeFieldPath
       toFieldPath: metadata.labels.port
       fromFieldPath: metadata.labels.port
-
-#!  - name: rdsinstance
-#!    base:
-#!      apiVersion: rds.aws.upbound.io/v1beta1
-#!      kind: Instance
-#!      spec:
-#!        forProvider:
-#!          engine: postgres
-#!          engineVersion: "13"
-#!          instanceClass: db.t3.micro
-#!          passwordSecretRef:
-#!            key: password
-#!            name: ""
-#!            namespace: #@ data.values.namespace
-#!          publiclyAccessible: true
-#!          vpcSecurityGroupIdSelector:
-#!            matchControllerRef: true
-#!          skipFinalSnapshot: true
-#!          storageEncrypted: false
-#!          storageType: gp2
-#!          dbSubnetGroupName: ""
-#!        writeConnectionSecretToRef:
-#!          namespace: #@ data.values.namespace
-#!
-#!    connectionDetails:
-#!    - name: type
-#!      value: postgresql
-#!    - name: provider
-#!      value: aws
-#!    - name: database
-#!      fromFieldPath: spec.forProvider.dbName
-#!      type: FromFieldPath
-#!    - name: username
-#!      fromFieldPath: spec.forProvider.username
-#!      type: FromFieldPath
-#!    - name: password
-#!      fromConnectionSecretKey: attribute.password
-#!    - name: host
-#!      fromFieldPath: status.atProvider.address
-#!      type: FromFieldPath
-#!    - name: port
-#!      fromFieldPath: status.atProvider.
-#!      type: FromFieldPath
-#!  
-#!    patches:
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: metadata.uid
-#!      toFieldPath: spec.writeConnectionSecretToRef.name
-#!      transforms:
-#!      - string:
-#!          fmt: '%s-postgresql'
-#!          type: Format
-#!        type: string
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: spec.parameters.storageGB
-#!      toFieldPath: spec.forProvider.allocatedStorage
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: spec.parameters.dbSubnetGroupName
-#!      toFieldPath: spec.forProvider.dbSubnetGroupName
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: spec.parameters.location
-#!      toFieldPath: spec.forProvider.region
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: spec.parameters.username
-#!      toFieldPath: spec.forProvider.username
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: spec.parameters.dbName
-#!      toFieldPath: spec.forProvider.dbName
-#!    - type: FromCompositeFieldPath
-#!      fromFieldPath: metadata.name
-#!      toFieldPath: spec.forProvider.passwordSecretRef.name
-#!    - type: ToCompositeFieldPath
-#!      fromFieldPath: status.atProvider.address
-#!      toFieldPath: status.address
-#!    - type: ToCompositeFieldPath
-#!      fromFieldPath: spec.parameters.location
-#!      toFieldPath: status.location
-#!    - type: ToCompositeFieldPath
-#!      fromFieldPath: status.atProvider.endpoint
-#!      toFieldPath: shared.port
-#!      transforms:
-#!      - type: string
-#!        string:
-#!          regexp:
-#!            match: '^([^:]+):(\d+)$'
-#!            group: 2
-#!          type: Regexp
 
   - name: securitygroup
     base:
@@ -183,9 +180,6 @@ spec:
       toFieldPath: spec.forProvider.region
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.labels.port
-      toFieldPath: metadata.labels.port
-    - type: FromCompositeFieldPath
-      fromFieldPath: metadata.labels.port
       toFieldPath: spec.forProvider.fromPort
       transforms:
       - type: convert
@@ -198,8 +192,3 @@ spec:
       - type: convert
         convert:
           toType: int
-
-    connectionDetails:
-    - name: port
-      fromFieldPath: metadata.labels.port
-      type: FromFieldPath
