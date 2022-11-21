@@ -24,7 +24,6 @@ spec:
             apiVersion: secretgen.k14s.io/v1alpha1
             kind: Password
             metadata:
-              name: ""
               namespace: #@ data.values.namespace
             spec:
               length: 64
@@ -48,7 +47,6 @@ spec:
           instanceClass: db.t3.micro
           passwordSecretRef:
             key: password
-            name: ""
             namespace: #@ data.values.namespace
           publiclyAccessible: true
           vpcSecurityGroupIdSelector:
@@ -108,8 +106,8 @@ spec:
       fromFieldPath: metadata.name
       toFieldPath: spec.forProvider.passwordSecretRef.name
     - type: ToCompositeFieldPath
-      fromFieldPath: status.atProvider.endpoint
-      toFieldPath: status.endpoint
+      fromFieldPath: status.atProvider.address
+      toFieldPath: status.address
     - type: ToCompositeFieldPath
       fromFieldPath: spec.parameters.location
       toFieldPath: status.location
@@ -131,12 +129,6 @@ spec:
     base:
       apiVersion: ec2.aws.upbound.io/v1beta1
       kind: SecurityGroup
-      spec:
-        forProvider:
-          description: ""
-          name: ""
-          region: ""
-          vpcId: ""
     patches:
     - type: FromCompositeFieldPath
       fromFieldPath: metadata.name
@@ -162,12 +154,9 @@ spec:
       kind: SecurityGroupRule
       spec:
         forProvider:
-          cidrBlocks:
-            - ""
           fromPort: 0
           toPort: 0
           protocol: tcp
-          region: ""
           securityGroupIdSelector:
             matchControllerRef: true
           type: ingress
