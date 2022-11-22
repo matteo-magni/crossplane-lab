@@ -2,7 +2,7 @@ apiVersion: testing.ref.svc.apps.tanzu.vmware.com/v1alpha1
 kind: PostgreSQLInstance
 metadata:
   namespace: default
-  name: trp-aws-024
+  name: trp-aws-025
 spec:
   compositionSelector:
     matchLabels:
@@ -15,7 +15,7 @@ spec:
       - 0.0.0.0/0
     dbSubnetGroupName: trp-testing
   publishConnectionDetailsTo:
-    name: trp-aws-rds-bindable-024
+    name: trp-aws-rds-bindable-025
     configRef:
       name: default
     metadata:

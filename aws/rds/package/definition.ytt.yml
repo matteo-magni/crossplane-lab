@@ -1,11 +1,10 @@
+#@ load("@ytt:data", "data")
+---
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xpostgresqlinstances.testing.ref.svc.apps.tanzu.vmware.com
+  name: #@ data.values.xrd.names.plural + "." + data.values.xrd.group
 spec:
-  claimNames:
-    kind: PostgreSQLInstance
-    plural: postgresqlinstances
   connectionSecretKeys:
   - type
   - provider
@@ -14,12 +13,11 @@ spec:
   - database
   - username
   - password
-  group: testing.ref.svc.apps.tanzu.vmware.com
-  names:
-    kind: XPostgreSQLInstance
-    plural: xpostgresqlinstances
+  group: #@ data.values.xrd.group
+  names: #@ data.values.xrd.names
+  claimNames: #@ data.values.xrd.claimNames
   versions:
-  - name: v1alpha1
+  - name: #@ data.values.xrd.version
     referenceable: true
     schema:
       openAPIV3Schema:

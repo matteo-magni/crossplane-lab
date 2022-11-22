@@ -1,0 +1,21 @@
+#@data/values-schema
+---
+xrd:
+  group: testing.ref.svc.apps.tanzu.vmware.com
+  names:
+    kind: XPostgreSQLInstance
+    plural: xpostgresqlinstances
+  claimNames:
+    kind: PostgreSQLInstance
+    plural: postgresqlinstances
+  version: v1alpha1
+
+crossplane:
+  namespace: upbound-system
+
+provider:
+  name: aws
+  image: xpkg.upbound.io/upbound/provider-aws
+  version: ">=v0.20.0"
+
+configurationName: postgresql

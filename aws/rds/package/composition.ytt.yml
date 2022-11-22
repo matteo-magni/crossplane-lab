@@ -24,7 +24,7 @@ spec:
             apiVersion: secretgen.k14s.io/v1alpha1
             kind: Password
             metadata:
-              namespace: #@ data.values.namespace
+              namespace: #@ data.values.crossplane.namespace
             spec:
               length: 64
               secretTemplate:
@@ -47,7 +47,7 @@ spec:
           instanceClass: db.t3.micro
           passwordSecretRef:
             key: password
-            namespace: #@ data.values.namespace
+            namespace: #@ data.values.crossplane.namespace
           publiclyAccessible: true
           vpcSecurityGroupIdSelector:
             matchControllerRef: true
@@ -56,7 +56,7 @@ spec:
           storageType: gp2
           dbSubnetGroupName: ""
         writeConnectionSecretToRef:
-          namespace: #@ data.values.namespace
+          namespace: #@ data.values.crossplane.namespace
 
     connectionDetails:
     - name: type
