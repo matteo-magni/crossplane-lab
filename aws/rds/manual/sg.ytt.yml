@@ -1,14 +1,4 @@
 #@ load("@ytt:data", "data")
-#! ---
-#! apiVersion: rds.aws.upbound.io/v1beta1
-#! kind: SecurityGroup
-#! metadata:
-#!   name: #@ data.values.name
-#! spec:
-#!   deletionPolicy: Delete
-#!   forProvider:
-#!     ingress: #@ [ {"cidr": x } for x in data.values.securityGroupCIDRs ]
-#!     region: #@ data.values.region
 ---
 apiVersion: ec2.aws.upbound.io/v1beta1
 kind: SecurityGroup
